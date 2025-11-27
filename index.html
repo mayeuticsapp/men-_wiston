@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="description" content="Il Delfino 2.0 - Menu digitale">
+    <title>Il Delfino 2.0 - Menu</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom, rgba(15, 30, 50, 0.45), rgba(15, 30, 50, 0.45)),
+                        url('sfondo.png') center top / cover fixed;
+            min-height: 100vh;
+            color: white;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(15,30,50,0.25), rgba(15,30,50,0.35));
+            backdrop-filter: blur(6px);
+            padding: 0.75rem;
+        }
+
+        header select {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 10px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            backdrop-filter: blur(6px);
+            margin-top: 0.25rem;
+        }
+
+        main {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .category {
+            margin-bottom: 2.5rem;
+        }
+
+        .category-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-align: center;
+            color: #fbbf24;
+            padding-bottom: 0.4rem;
+            border-bottom: 2px solid rgba(251,191,36,0.4);
+            margin-bottom: 1rem;
+        }
+
+        .items {
+            background: rgba(15,30,50,0.40);
+            backdrop-filter: blur(5px);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .item:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.95);
+            flex: 1;
+            padding-right: 1rem;
+        }
+
+        .item-price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fbbf24;
+            white-space: nowrap;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+            margin-top: 3rem;
+        }
+
+        #tornaSu {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: rgba(251,191,36,0.9);
+            color: #0f1e32;
+            font-size: 1.8rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        #tornaSu:hover {
+            background: rgba(251,191,36,1);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <select id="categorySelect" onchange="scrollToCategory()">
+        <option value="">Vai alla categoria…</option>
+    </select>
+</header>
+
+<main id="menuContainer">
+    <!-- Il menu verrà costruito qui in automatico -->
+</main>
+
+<footer>
+    Prezzi IVA inclusa
+</footer>
+
+<button id="tornaSu" onclick="scrollToTop()">↑</button>
+
+<script>
+async function loadMenu() {
+    const response = await fetch("menu.json");
+    const menu = await response.json();
+
+    const container = document.getElementById("menuContainer");
+    const select = document.getElementById("categorySelect");
+
+    for (const categoria in menu) {
+        // aggiungo voce nel menu a tendina
+        const opt = document.createElement("option");
+        opt.value = categoria;
+        opt.textContent = categoria;
+        select.appendChild(opt);
+
+        // creo sezione categoria
+        const section = document.createElement("section");
+        section.className = "category";
+
+        const title = document.createElement("h2");
+        title.className = "category-title";
+        title.textContent = categoria;
+
+        const itemsBox = document.createElement("div");
+        itemsBox.className = "items";
+
+        menu[categoria].forEach(p => {
+            const row = document.createElement("div");
+            row.className = "item";
+
+            const name = document.createElement("span");
+            name.className = "item-name";
+            name.textContent = p.nome;
+
+            const price = document.createElement("span");
+            price.className = "item-price";
+            price.textContent = "€ " + parseFloat(p.prezzo).toFixed(2);
+
+            row.appendChild(name);
+            row.appendChild(price);
+            itemsBox.appendChild(row);
+        });
+
+        section.appendChild(title);
+        section.appendChild(itemsBox);
+        container.appendChild(section);
+    }
+}
+
+function scrollToCategory() {
+    const value = document.getElementById("categorySelect").value;
+    if (!value) return;
+
+    const target = [...document.querySelectorAll(".category-title")]
+        .find(el => el.textContent.trim() === value);
+
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+window.addEventListener("scroll", () => {
+    const btn = document.getElementById("tornaSu");
+    btn.style.display = window.scrollY > 400 ? "block" : "none";
+});
+
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+loadMenu();
+</script>
+
+</body>
+</html>

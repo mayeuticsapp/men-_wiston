@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Menu - Admin</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        #menuContainer {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin-bottom: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        th {
+            background: #2d3748;
+            color: white;
+        }
+
+        input, select {
+            width: 95%;
+            padding: 6px;
+            border: 1px solid #aaa;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 8px 15px;
+            margin-top: 15px;
+            background: #2d3748;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background: #1a202c;
+        }
+
+        .deleteBtn {
+            background: #c53030;
+        }
+        .deleteBtn:hover {
+            background: #9b2c2c;
+        }
+
+        #saveMessage {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Pannello di Gestione Menu</h1>
+
+<div id="menuContainer"></div>
+
+<div style="text-align:center;">
+    <button onclick="addNewItem()">+ Aggiungi Prodotto</button>
+    <button onclick="saveMenu()">💾 Salva Modifiche</button>
+</div>
+
+<p id="saveMessage">Salvato con successo!</p>
+
+<script>
+let data = {};
+
+/* 1️⃣ CARICA IL JSON */
+async function loadMenu() {
+    const resp = await fetch('menu.json');
+    data = await resp.json();
+    renderTable();
+}
+
+/* 2️⃣ CREA TABELLA */
+function renderTable() {
+    const container = document.getElementById("menuContainer");
+    container.innerHTML = "";
+
+    const table = document.createElement("table");
+
+    table.innerHTML = `
+        <tr>
+            <th>Categoria</th>
+            <th>Nome</th>
+            <th>Prezzo (€)</th>
+            <th>Elimina</th>
+        </tr>
+    `;
+
+    Object.keys(data).forEach(cat => {
+        data[cat].forEach((item, i) => {
+            let row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td><input value="${cat}" onchange="updateCategory('${cat}', ${i}, this.value)"></td>
+                <td><input value="${item.nome}" onchange="updateName('${cat}', ${i}, this.value)"></td>
+                <td><input value="${item.prezzo}" onchange="updatePrice('${cat}', ${i}, this.value)"></td>
+                <td><button class="deleteBtn" onclick="deleteItem('${cat}', ${i})">X</button></td>
+            `;
+
+            table.appendChild(row);
+        });
+    });
+
+    container.appendChild(table);
+}
+
+/* 3️⃣ FUNZIONI DI MODIFICA */
+function updateCategory(oldCat, index, newCat) {
+    const item = data[oldCat][index];
+
+    if (!data[newCat]) data[newCat] = [];
+    data[newCat].push(item);
+
+    data[oldCat].splice(index, 1);
+    if (data[oldCat].length === 0) delete data[oldCat];
+
+    renderTable();
+}
+
+function updateName(cat, index, name) {
+    data[cat][index].nome = name;
+}
+
+function updatePrice(cat, index, price) {
+    data[cat][index].prezzo = price;
+}
+
+function deleteItem(cat, index) {
+    data[cat].splice(index, 1);
+    if (data[cat].length === 0) delete data[cat];
+    renderTable();
+}
+
+/* 4️⃣ AGGIUNGI PRODOTTO */
+function addNewItem() {
+    const categoria = prompt("Inserisci la categoria:");
+    if (!categoria) return;
+
+    if (!data[categoria]) data[categoria] = [];
+
+    data[categoria].push({
+        nome: "Nuovo prodotto",
+        prezzo: "0.00"
+    });
+
+    renderTable();
+}
+
+/* 5️⃣ SALVA SU NETLIFY FUNCTION */
+async function saveMenu() {
+    const resp = await fetch('/.netlify/functions/save-menu', {
+        method: "POST",
+        body: JSON.stringify(data)
+    });
+
+    if (resp.ok) {
+        let msg = document.getElementById("saveMessage");
+        msg.style.display = "block";
+        msg.textContent = "Dati salvati con successo!";
+        setTimeout(() => msg.style.display = "none", 2500);
+    }
+}
+
+loadMenu();
+</script>
+
+</body>
+</html>
