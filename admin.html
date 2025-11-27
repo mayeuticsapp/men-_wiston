@@ -179,7 +179,8 @@ function addNewItem() {
 
 /* 5️⃣ SALVA SU NETLIFY FUNCTION */
 async function saveMenu() {
-    const resp = await fetch('/.netlify/functions/save-menu', {
+    const resp = await fetch('https://fancy-sfogliatella-07631b.netlify.app/.netlify/functions/save-menu', {
+, {
         method: "POST",
         body: JSON.stringify(data)
     });
